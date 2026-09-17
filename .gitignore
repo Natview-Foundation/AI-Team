@@ -1,0 +1,28 @@
+# Virtual Environments
+ls_venv/
+.venv/
+venv/
+ENV/
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Environment Variables & Credentials
+.env
+security/
+
+# Data
+# Ignore generated DuckDB data but KEEP reference data
+data/current/
+*.parquet
+
+# OS specific
+.DS_Store
+
+# Logs
+*.log
+
+test_pipeline.py
