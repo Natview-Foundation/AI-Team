@@ -6,6 +6,7 @@ pydantic==2.11.3
 # --- LLM ---
 langchain-core
 langchain-openai
+langgraph
 
 # --- Database ---
 duckdb==1.3.0

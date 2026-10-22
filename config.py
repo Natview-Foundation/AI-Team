@@ -34,9 +34,6 @@ ENTITIES_PATH: Path = REFERENCE_DIR / "entities.json"
 GOOGLE_SHEETS_CREDENTIALS_PATH: str = os.getenv("GOOGLE_SHEETS_CREDENTIALS_PATH", "")
 GOOGLE_SHEET_NAME: str = os.getenv("GOOGLE_SHEET_NAME", "LS 2.0 Dashboard Staging Table")
 
-# ─── DuckDB ───
-TABLE_NAME: str = "survey"
-
 # ─── API ───
 API_HOST: str = os.getenv("API_HOST", "0.0.0.0")
 API_PORT: int = int(os.getenv("API_PORT", "8000"))
