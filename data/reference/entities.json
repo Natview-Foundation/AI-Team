@@ -1279,6 +1279,47 @@
         "Week",
         "LS"
       ]
+    },
+    "dhis2_indicators_dashboard": {
+      "_sheet_name": "DHIS2_Indicators_Dashboard",
+      "_note": "Monthly DHIS2 key health indicators (outpatient attendance, ANC 4, SBA, Measles, Penta 3) per facility.",
+      "facility_identifier": [
+        "longitudinal_id"
+      ],
+      "indicators": [
+        "Outpatient Attendance",
+        "ANC 4",
+        "SBA",
+        "Measles",
+        "Penta 3"
+      ],
+      "temporal_metadata": [
+        "lmonth",
+        "Year",
+        "Month",
+        "MonthName",
+        "source"
+      ]
+    },
+    "nhmis_registers_dashboard": {
+      "_sheet_name": "NHMIS_Registers_Dashboard",
+      "_note": "Monthly NHMIS register health data (outpatient attendance, ANC 4, SBA, Penta 3, Measles) per facility.",
+      "facility_identifier": [
+        "longitudinal_id"
+      ],
+      "indicators": [
+        "Outpatient Attendance",
+        "ANC 4",
+        "SBA",
+        "Penta 3",
+        "Measles"
+      ],
+      "temporal_metadata": [
+        "Year",
+        "Month",
+        "lmonth",
+        "source"
+      ]
     }
   }
 }

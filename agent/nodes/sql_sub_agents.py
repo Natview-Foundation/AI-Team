@@ -45,6 +45,7 @@ def _build_sub_agent_system_prompt(table_name: str, resolved_entities: dict) -> 
         if resolved_entities.get("ward"):
             parts.append(f"Ward = '{resolved_entities['ward']}'")
         if parts:
+            fac_col = "longitudinal_id" if "longitudinal_id" in columns_str else "facility"
             entities_block = f"""
 PRE-RESOLVED ENTITIES:
   {', '.join(parts)}
@@ -52,7 +53,7 @@ PRE-RESOLVED ENTITIES:
 GEOGRAPHIC FILTERING RULES:
   - Use ONLY the entities listed above in your WHERE clause.
   - NEVER guess, infer, or invent an LGA or Ward that is not listed above.
-  - If only a Facility is provided, filter ONLY by that facility (e.g. facility = '{resolved_entities.get('facility')}'). Every facility identifier is globally unique. Do NOT add unrequested LGA or Ward conditions.
+  - If only a Facility is provided, filter ONLY by that facility (e.g. {fac_col} = '{resolved_entities.get('facility')}'). Every facility identifier is globally unique. Do NOT add unrequested LGA or Ward conditions.
 """
 
     # Determine the geographic column names for this table
@@ -71,6 +72,13 @@ GEOGRAPHIC COLUMN NOTE:
   If (and ONLY if) an LGA or Ward was explicitly requested/pre-resolved:
   This table uses "LGA" for LGA and "Ward" for ward (capitalized).
   Do NOT filter by LGA or Ward if the user only specified a facility!
+"""
+
+    if "longitudinal_id" in columns_str and "facility" not in columns_str:
+        geo_hint += """
+FACILITY COLUMN NOTE:
+  This table uses "longitudinal_id" as the facility identifier (e.g. longitudinal_id = 'facility_id').
+  It does NOT have a column named "facility".
 """
 
     # Fetch the domain-specific prompt for this table, fallback to generic
