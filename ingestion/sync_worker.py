@@ -20,9 +20,14 @@ from core.database import refresh_database
 
 logger = logging.getLogger(__name__)
 
-def run_sync() -> bool:
+import shutil
+
+def run_sync(target_tables: list[str] | None = None) -> bool:
     """
-    Executes the full data synchronization pipeline for all sheets.
+    Executes the data synchronization pipeline.
+    If target_tables is provided, syncs only those tables and carries forward
+    existing parquets from the latest snapshot for the remaining tables.
+    If target_tables is None, syncs all tables defined in entities.json.
     Returns True if successful, False otherwise.
     """
     logger.info("Starting data synchronization pipeline...")
@@ -42,9 +47,25 @@ def run_sync() -> bool:
         version_dir = CURRENT_DATA_DIR / timestamp
         version_dir.mkdir(parents=True, exist_ok=True)
         
+        # If targeting specific tables, carry forward existing parquets from latest snapshot
+        if target_tables:
+            dirs = [d for d in CURRENT_DATA_DIR.iterdir() if d.is_dir() and d != version_dir]
+            if dirs:
+                latest_dir = sorted(dirs)[-1]
+                logger.info(f"Carrying forward existing Parquet snapshots from {latest_dir.name}...")
+                for src_pq in latest_dir.glob("*.parquet"):
+                    dst_pq = version_dir / src_pq.name
+                    shutil.copy2(src_pq, dst_pq)
+
+        tables_to_sync = target_tables if target_tables else list(columns_schema.keys())
         success = True
         
-        for table_name, schema in columns_schema.items():
+        for table_name in tables_to_sync:
+            schema = columns_schema.get(table_name)
+            if not schema:
+                logger.warning(f"Table '{table_name}' not defined in entities.json schema. Skipping.")
+                continue
+
             sheet_name = schema.get("_sheet_name")
             if not sheet_name:
                 logger.warning(f"Table '{table_name}' has no '_sheet_name' specified. Skipping.")
@@ -102,4 +123,5 @@ def run_sync() -> bool:
 # If run directly as a script, execute the sync
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
-    run_sync()
+    tables = sys.argv[1:] if len(sys.argv) > 1 else None
+    run_sync(target_tables=tables)
