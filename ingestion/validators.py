@@ -1,12 +1,10 @@
 """
 Data Validation module for the ingested Google Sheets data.
-Ensures the data schema matches the exact columns the LLM expects.
+Ensures the data schema matches the exact columns expected by the LLM.
 """
 
 import pandas as pd
 from dataclasses import dataclass
-
-from agent.constants import ALL_COLUMNS
 
 @dataclass
 class ValidationReport:
@@ -15,7 +13,7 @@ class ValidationReport:
     warnings: list[str]
 
 
-def validate_dataframe(df: pd.DataFrame) -> ValidationReport:
+def validate_dataframe(df: pd.DataFrame, expected_columns: list[str]) -> ValidationReport:
     """
     Validates that the dataframe contains all the expected columns.
     """
@@ -30,14 +28,13 @@ def validate_dataframe(df: pd.DataFrame) -> ValidationReport:
     # 2. Check for missing required columns
     df_columns_lower = {str(c).lower().strip() for c in df.columns}
     
-    for required_col in ALL_COLUMNS:
+    for required_col in expected_columns:
         # We do a case-insensitive check to be slightly forgiving to sheet typos
         if required_col.lower() not in df_columns_lower:
             errors.append(f"Missing required column: '{required_col}'")
             
     # 3. Check for critical geographic columns nulls
-    # In pandas, empty sheet cells usually come back as empty strings "" or None
-    for geo_col in ["lga", "ward", "facility"]:
+    for geo_col in ["lga", "ward", "facility", "facility_details-lga", "facility_details-ward", "facility_details-facility", "LGA", "Ward"]:
         # Find actual column name in df (case-insensitive mapping)
         actual_col = next((c for c in df.columns if str(c).lower().strip() == geo_col.lower()), None)
         if actual_col:

@@ -6,7 +6,7 @@ import duckdb
 from pathlib import Path
 import logging
 
-from config import CURRENT_DATA_DIR, TABLE_NAME
+from config import CURRENT_DATA_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ def close_database():
 
 def refresh_database():
     """
-    Finds the latest Parquet directory and registers it as a view.
+    Finds the latest Parquet directory and registers all parquet files as views.
     Called at startup and after a successful data ingestion sync.
     """
     global _con
@@ -49,14 +49,14 @@ def refresh_database():
 
     # Check if data directory exists
     if not CURRENT_DATA_DIR.exists():
-        logger.warning(f"Data directory {CURRENT_DATA_DIR} does not exist yet. Table not registered.")
+        logger.warning(f"Data directory {CURRENT_DATA_DIR} does not exist yet. Tables not registered.")
         return
 
     # Find all subdirectories (which are versioned timestamps like 2026-08-11-001)
     dirs = [d for d in CURRENT_DATA_DIR.iterdir() if d.is_dir()]
     
     if not dirs:
-        logger.warning(f"No versioned data directories found in {CURRENT_DATA_DIR}. Table not registered.")
+        logger.warning(f"No versioned data directories found in {CURRENT_DATA_DIR}. Tables not registered.")
         return
         
     # Sort to get the latest (alphabetically/chronologically)
@@ -66,18 +66,17 @@ def refresh_database():
     parquet_files = list(latest_dir.glob("*.parquet"))
     
     if not parquet_files:
-        logger.warning(f"No Parquet files found in {latest_dir}. Table not registered.")
+        logger.warning(f"No Parquet files found in {latest_dir}. Tables not registered.")
         return
         
-    # Register the glob of parquet files as a view
-    # e.g., CREATE OR REPLACE VIEW survey AS SELECT * FROM read_parquet('data/current/2026-08-11-001/*.parquet')
-    glob_path = str(latest_dir / "*.parquet")
-    try:
-        # DuckDB lets us query parquet globs directly
-        _con.execute(f"CREATE OR REPLACE VIEW {TABLE_NAME} AS SELECT * FROM read_parquet('{glob_path}')")
-        logger.info(f"Successfully registered table '{TABLE_NAME}' pointing to {glob_path}")
-    except Exception as e:
-        logger.error(f"Failed to register DuckDB view: {e}")
+    # Register each parquet file as a view named after its base name
+    for pq_path in parquet_files:
+        table_name = pq_path.stem  # e.g., "baseline_data_ls1"
+        try:
+            _con.execute(f"CREATE OR REPLACE VIEW {table_name} AS SELECT * FROM read_parquet('{str(pq_path)}')")
+            logger.info(f"Successfully registered table '{table_name}' pointing to {pq_path.name}")
+        except Exception as e:
+            logger.error(f"Failed to register DuckDB view '{table_name}': {e}")
 
 
 def execute_query(sql: str) -> list[dict]:
